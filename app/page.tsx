@@ -104,7 +104,7 @@ function hello() {
           <div className="w-auto">
             <PdfDownloadButton 
               fileName="markdown-document.pdf"
-              className="w-auto h-auto py-1.5 px-3 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-sm"
+              className="w-auto"
             />
           </div>
         </div>

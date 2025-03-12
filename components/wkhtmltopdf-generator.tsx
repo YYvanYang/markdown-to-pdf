@@ -259,7 +259,7 @@ export default function WkhtmltopdfGenerator({
     <Button
       onClick={generatePdf}
       disabled={isGenerating}
-      className={`w-full h-12 md:h-14 text-base flex items-center justify-center ${className}`}
+      className={`w-full h-12 md:h-14 text-base flex items-center justify-center transition-all duration-300 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 focus:ring-2 focus:ring-blue-300 focus:ring-opacity-50 shadow-md hover:shadow-lg ${className}`}
     >
       {isGenerating ? (
         <span style={{ display: 'flex', alignItems: 'center' }}>

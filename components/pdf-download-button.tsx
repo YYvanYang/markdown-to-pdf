@@ -11,7 +11,7 @@ const WkhtmltopdfGenerator = dynamic(() => import('./wkhtmltopdf-generator'), {
   loading: () => (
     <Button 
       size="lg" 
-      className="w-full h-12 md:h-14 text-base flex items-center justify-center" 
+      className="w-full h-12 md:h-14 text-base flex items-center justify-center bg-gradient-to-r from-blue-500 to-blue-400 opacity-80 cursor-not-allowed shadow-md" 
       disabled
     >
       <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -44,7 +44,7 @@ export function PdfDownloadButton({
     return (
       <Button 
         size="lg" 
-        className={`w-full h-12 md:h-14 text-base flex items-center justify-center ${className}`} 
+        className={`w-full h-12 md:h-14 text-base flex items-center justify-center bg-gradient-to-r from-blue-500 to-blue-400 opacity-80 cursor-not-allowed shadow-md ${className}`} 
         disabled
       >
         <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -61,9 +61,13 @@ export function PdfDownloadButton({
     return (
       <Button 
         size="lg" 
-        className={`w-full h-12 md:h-14 text-base ${className}`} 
+        className={`w-full h-12 md:h-14 text-base flex items-center justify-center bg-gradient-to-r from-gray-400 to-gray-300 cursor-not-allowed shadow-md ${className}`} 
         disabled
       >
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+          <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+          <polyline points="13 2 13 9 20 9"></polyline>
+        </svg>
         请先添加内容
       </Button>
     );
