@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import dynamic from 'next/dynamic';
 
 // 动态导入PDF生成器组件，避免SSR问题
-const PdfGenerator = dynamic(() => import('./pdf-generator'), { 
+const WkhtmltopdfGenerator = dynamic(() => import('./wkhtmltopdf-generator'), { 
   ssr: false,
   loading: () => (
     <Button 
@@ -71,9 +71,10 @@ export function PdfDownloadButton({
 
   return (
     <div className={`w-full ${className}`}>
-      <PdfGenerator 
+      <WkhtmltopdfGenerator 
         markdown={markdown} 
         fileName={fileName}
+        className={className}
       />
     </div>
   );

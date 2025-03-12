@@ -1,17 +1,7 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { MarkdownProvider } from "@/lib/markdownContext";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { notoSansSC, roboto, sourceCodePro } from "@/lib/fonts";
 
 export const metadata: Metadata = {
   title: "Markdown to PDF Converter",
@@ -24,9 +14,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="zh-CN">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${notoSansSC.variable} ${roboto.variable} ${sourceCodePro.variable} antialiased`}
       >
         <MarkdownProvider>
           {children}
