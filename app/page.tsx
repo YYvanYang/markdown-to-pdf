@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useMarkdown } from '@/lib/markdownContext';
 import { PdfDownloadButton } from '@/components/pdf-download-button';
+import { ConditionalMarkdownDisplay } from '@/components/conditional-markdown-display';
 import { marked } from 'marked';
 
 export default function Home() {
   const { markdown, setMarkdown } = useMarkdown();
   const [isClient, setIsClient] = useState(false);
+  const [showConditional, setShowConditional] = useState(false);
 
   // 确保我们在客户端
   useEffect(() => {
@@ -95,6 +97,25 @@ function hello() {
           />
         </div>
       </main>
+      
+      <div className="p-4 bg-gray-50 border-t border-b">
+        <div className="max-w-md mx-auto">
+          <h3 className="text-lg font-semibold mb-2">React use API 演示</h3>
+          <p className="mb-4">这个示例展示了如何在条件语句中使用 Context（传统的 useContext 无法做到）</p>
+          
+          <button
+            className="px-4 py-2 bg-blue-500 text-white rounded mb-4"
+            onClick={() => setShowConditional(!showConditional)}
+          >
+            {showConditional ? '隐藏' : '显示'} Markdown 摘要
+          </button>
+          
+          <ConditionalMarkdownDisplay 
+            condition={showConditional} 
+            fallback={<p className="italic text-gray-500">点击上面的按钮查看 Markdown 摘要</p>}
+          />
+        </div>
+      </div>
       
       <footer className="p-4 border-t">
         <div className="max-w-md mx-auto">
