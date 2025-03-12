@@ -388,19 +388,59 @@ export default function PdfGenerator({ markdown, fileName = 'document.pdf' }: Pd
       fileName={fileName}
       style={{
         textDecoration: 'none',
-        padding: '10px 16px',
-        borderRadius: '0.375rem',
+        padding: '12px 16px',
+        borderRadius: '0.5rem',
         backgroundColor: '#0284c7',
         color: 'white',
-        fontWeight: '500',
-        display: 'inline-block',
-        textAlign: 'center',
+        fontWeight: '600',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
         width: '100%',
+        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+        fontSize: '16px',
+        height: '48px',
+        touchAction: 'manipulation',
+        WebkitTapHighlightColor: 'transparent',
       }}
     >
-      {({ loading }) => 
-        loading ? '生成PDF中...' : '导出为 PDF'
-      }
+      {({ loading, error }) => {
+        if (error) {
+          return (
+            <span style={{ display: 'flex', alignItems: 'center' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              生成失败，请重试
+            </span>
+          );
+        }
+        
+        if (loading) {
+          return (
+            <span style={{ display: 'flex', alignItems: 'center' }}>
+              <svg className="animate-spin" style={{ marginRight: '8px', animation: 'spin 1s linear infinite' }} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              生成PDF中...
+            </span>
+          );
+        }
+        
+        return (
+          <span style={{ display: 'flex', alignItems: 'center' }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            导出为 PDF
+          </span>
+        );
+      }}
     </PDFDownloadLink>
   );
 }

@@ -3,18 +3,22 @@
 import { useState, useEffect } from 'react';
 import { useMarkdown } from '@/lib/markdownContext';
 import { PdfDownloadButton } from '@/components/pdf-download-button';
-import { ConditionalMarkdownDisplay } from '@/components/conditional-markdown-display';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 export default function Home() {
   const { markdown, setMarkdown } = useMarkdown();
   const [isClient, setIsClient] = useState(false);
-  const [showConditional, setShowConditional] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   // 确保我们在客户端
   useEffect(() => {
     setIsClient(true);
+    
+    // 检测设备类型，在桌面端默认不显示预览
+    const isMobile = window.innerWidth < 768;
+    setShowPreview(isMobile ? false : false);
+    
     // 设置默认Markdown内容
     if (!markdown) {
       setMarkdown(`# Markdown 到 PDF 转换器
@@ -78,30 +82,60 @@ function hello() {
     }
   }, [markdown, setMarkdown]);
 
+  // 切换到编辑器模式
+  const switchToEditor = () => {
+    setShowPreview(false);
+  };
+
+  // 切换到预览模式
+  const switchToPreview = () => {
+    setShowPreview(true);
+  };
+
   if (!isClient) {
     return <div className="flex items-center justify-center min-h-screen">加载中...</div>;
   }
 
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="bg-slate-800 text-white p-4">
-        <h1 className="text-2xl font-bold text-center">Markdown 到 PDF 转换器</h1>
+      <header className="bg-slate-800 text-white p-4 sticky top-0 z-10">
+        <h1 className="text-xl md:text-2xl font-bold text-center">Markdown 到 PDF 转换器</h1>
       </header>
       
-      <main className="flex flex-1 flex-col md:flex-row p-4 gap-4">
-        <div className="flex-1 flex flex-col">
-          <h2 className="text-lg font-semibold mb-2">Markdown 编辑器</h2>
+      {/* 移动端切换按钮 */}
+      <div className="md:hidden flex border-b">
+        <button 
+          className={`flex-1 py-3 text-center font-medium ${!showPreview ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-500' : 'text-gray-600'}`}
+          onClick={switchToEditor}
+          aria-label="切换到编辑器模式"
+        >
+          编辑器
+        </button>
+        <button 
+          className={`flex-1 py-3 text-center font-medium ${showPreview ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-500' : 'text-gray-600'}`}
+          onClick={switchToPreview}
+          aria-label="切换到预览模式"
+        >
+          预览
+        </button>
+      </div>
+      
+      <main className="flex flex-1 flex-col md:flex-row p-2 md:p-4 gap-4">
+        {/* 编辑器区域 - 在移动端根据状态显示/隐藏 */}
+        <div className={`flex-1 flex flex-col ${showPreview ? 'hidden md:flex' : 'flex'}`}>
+          <h2 className="text-base md:text-lg font-semibold mb-2">Markdown 编辑器</h2>
           <textarea
-            className="flex-1 p-4 border rounded-md font-mono text-sm resize-none"
+            className="flex-1 p-3 md:p-4 border rounded-md font-mono text-sm resize-none"
             value={markdown}
             onChange={(e) => setMarkdown(e.target.value)}
             placeholder="在这里输入 Markdown 内容..."
           />
         </div>
         
-        <div className="flex-1 flex flex-col">
-          <h2 className="text-lg font-semibold mb-2">预览</h2>
-          <div className="flex-1 p-4 border rounded-md overflow-auto prose prose-sm max-w-none">
+        {/* 预览区域 - 在移动端根据状态显示/隐藏 */}
+        <div className={`flex-1 flex flex-col ${!showPreview ? 'hidden md:flex' : 'flex'}`}>
+          <h2 className="text-base md:text-lg font-semibold mb-2">预览</h2>
+          <div className="flex-1 p-3 md:p-4 border rounded-md overflow-auto prose prose-sm md:prose max-w-none">
             {isClient && (
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {markdown}
@@ -112,30 +146,11 @@ function hello() {
         </div>
       </main>
       
-      <div className="p-4 bg-gray-50 border-t border-b">
-        <div className="max-w-md mx-auto">
-          <h3 className="text-lg font-semibold mb-2">React use API 演示</h3>
-          <p className="mb-4">这个示例展示了如何在条件语句中使用 Context（传统的 useContext 无法做到）</p>
-          
-          <button
-            className="px-4 py-2 bg-blue-500 text-white rounded mb-4"
-            onClick={() => setShowConditional(!showConditional)}
-          >
-            {showConditional ? '隐藏' : '显示'} Markdown 摘要
-          </button>
-          
-          <ConditionalMarkdownDisplay 
-            condition={showConditional} 
-            fallback={<p className="italic text-gray-500">点击上面的按钮查看 Markdown 摘要</p>}
-          />
-        </div>
-      </div>
-      
-      <footer className="p-4 border-t">
+      <footer className="p-3 md:p-4 border-t">
         <div className="max-w-md mx-auto">
           <PdfDownloadButton 
             fileName="markdown-document.pdf"
-            className="mt-4"
+            className="mt-3 md:mt-4"
           />
         </div>
       </footer>

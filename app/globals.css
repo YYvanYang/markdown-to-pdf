@@ -3,6 +3,8 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --font-base: 16px;
+  --spacing-base: 1rem;
 }
 
 @theme inline {
@@ -19,8 +21,54 @@
   }
 }
 
+/* 移动端优先的基础样式 */
+html {
+  font-size: var(--font-base);
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  line-height: 1.5;
+  text-rendering: optimizeSpeed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 移动端触摸优化 */
+button, 
+a, 
+input, 
+textarea, 
+select {
+  touch-action: manipulation;
+}
+
+/* 响应式图片 */
+img, 
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* 移动端表单元素优化 */
+input, 
+textarea, 
+select, 
+button {
+  font-size: 1rem; /* 确保在iOS上不会自动放大 */
+}
+
+/* 移动端滚动优化 */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 移动端点击区域优化 */
+button, 
+a {
+  min-height: 44px; /* 苹果推荐的最小触摸区域 */
+  min-width: 44px;
 }
