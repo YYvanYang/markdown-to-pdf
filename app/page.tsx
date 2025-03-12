@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useMarkdown } from '@/lib/markdownContext';
 import { PdfDownloadButton } from '@/components/pdf-download-button';
 import { ConditionalMarkdownDisplay } from '@/components/conditional-markdown-display';
-import { marked } from 'marked';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export default function Home() {
   const { markdown, setMarkdown } = useMarkdown();
@@ -60,6 +61,19 @@ function hello() {
 1. 第一步
 2. 第二步
 3. 第三步
+
+### 表格示例
+
+| 名称 | 类型 | 描述 |
+| ---- | ---- | ---- |
+| 名称1 | 类型1 | 这是描述1 |
+| 名称2 | 类型2 | 这是描述2 |
+
+### 任务列表
+
+- [x] 已完成任务
+- [ ] 未完成任务
+- [ ] 另一个未完成任务
 `);
     }
   }, [markdown, setMarkdown]);
@@ -87,14 +101,14 @@ function hello() {
         
         <div className="flex-1 flex flex-col">
           <h2 className="text-lg font-semibold mb-2">预览</h2>
-          <div 
-            className="flex-1 p-4 border rounded-md overflow-auto"
-            dangerouslySetInnerHTML={{ 
-              __html: isClient 
-                ? marked(markdown) 
-                : '加载中...' 
-            }}
-          />
+          <div className="flex-1 p-4 border rounded-md overflow-auto prose prose-sm max-w-none">
+            {isClient && (
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {markdown}
+              </ReactMarkdown>
+            )}
+            {!isClient && <p>加载中...</p>}
+          </div>
         </div>
       </main>
       
