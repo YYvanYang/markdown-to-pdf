@@ -99,7 +99,15 @@ function hello() {
   return (
     <div className="flex flex-col min-h-screen">
       <header className="bg-slate-800 text-white p-4 sticky top-0 z-10">
-        <h1 className="text-xl md:text-2xl font-bold text-center">Markdown 到 PDF 转换器</h1>
+        <div className="flex items-center justify-between max-w-6xl mx-auto">
+          <h1 className="text-xl md:text-2xl font-bold">Markdown 到 PDF 转换器</h1>
+          <div className="w-auto">
+            <PdfDownloadButton 
+              fileName="markdown-document.pdf"
+              className="w-auto h-auto py-1.5 px-3 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-sm"
+            />
+          </div>
+        </div>
       </header>
       
       {/* 移动端切换按钮 */}
@@ -120,12 +128,12 @@ function hello() {
         </button>
       </div>
       
-      <main className="flex flex-1 flex-col md:flex-row p-2 md:p-4 gap-4">
+      <main className="flex flex-1 flex-col md:flex-row p-2 md:p-4 gap-4 h-[calc(100vh-120px)] md:h-auto">
         {/* 编辑器区域 - 在移动端根据状态显示/隐藏 */}
         <div className={`flex-1 flex flex-col ${showPreview ? 'hidden md:flex' : 'flex'}`}>
           <h2 className="text-base md:text-lg font-semibold mb-2">Markdown 编辑器</h2>
           <textarea
-            className="flex-1 p-3 md:p-4 border rounded-md font-mono text-sm resize-none"
+            className="flex-1 p-3 md:p-4 border rounded-md font-mono text-sm resize-none min-h-[350px] md:min-h-0"
             value={markdown}
             onChange={(e) => setMarkdown(e.target.value)}
             placeholder="在这里输入 Markdown 内容..."
@@ -135,7 +143,7 @@ function hello() {
         {/* 预览区域 - 在移动端根据状态显示/隐藏 */}
         <div className={`flex-1 flex flex-col ${!showPreview ? 'hidden md:flex' : 'flex'}`}>
           <h2 className="text-base md:text-lg font-semibold mb-2">预览</h2>
-          <div className="flex-1 p-3 md:p-4 border rounded-md overflow-auto prose prose-sm md:prose max-w-none">
+          <div className="flex-1 p-3 md:p-4 border rounded-md overflow-auto prose prose-sm md:prose max-w-none min-h-[350px] md:min-h-0">
             {isClient && (
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {markdown}
@@ -146,12 +154,9 @@ function hello() {
         </div>
       </main>
       
-      <footer className="p-3 md:p-4 border-t">
-        <div className="max-w-md mx-auto">
-          <PdfDownloadButton 
-            fileName="markdown-document.pdf"
-            className="mt-3 md:mt-4"
-          />
+      <footer className="p-3 md:p-4 border-t bg-white dark:bg-gray-900 text-center text-sm text-gray-500">
+        <div className="max-w-6xl mx-auto">
+          Markdown 到 PDF 转换器 &copy; {new Date().getFullYear()}
         </div>
       </footer>
     </div>
