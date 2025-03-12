@@ -1,102 +1,108 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useMarkdown } from '@/lib/markdownContext';
+import { PdfDownloadButton } from '@/components/pdf-download-button';
+import { marked } from 'marked';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const { markdown, setMarkdown } = useMarkdown();
+  const [isClient, setIsClient] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // 确保我们在客户端
+  useEffect(() => {
+    setIsClient(true);
+    // 设置默认Markdown内容
+    if (!markdown) {
+      setMarkdown(`# Markdown 到 PDF 转换器
+
+## 简介
+
+这是一个使用 React 和 @react-pdf/renderer 构建的 Markdown 到 PDF 转换工具。
+
+## 功能特点
+
+- 支持基本的 Markdown 语法
+- 实时预览
+- 高质量 PDF 导出
+- 自定义字体和样式
+
+## 使用方法
+
+1. 在左侧编辑器中输入 Markdown 内容
+2. 在右侧查看实时预览
+3. 点击"导出为 PDF"按钮下载 PDF 文件
+
+## 代码示例
+
+\`\`\`javascript
+function hello() {
+  console.log("Hello, world!");
+}
+\`\`\`
+
+> 这是一个引用块
+
+**粗体文本** 和 *斜体文本*
+
+---
+
+### 列表示例
+
+- 项目 1
+- 项目 2
+  - 子项目 A
+  - 子项目 B
+- 项目 3
+
+1. 第一步
+2. 第二步
+3. 第三步
+`);
+    }
+  }, [markdown, setMarkdown]);
+
+  if (!isClient) {
+    return <div className="flex items-center justify-center min-h-screen">加载中...</div>;
+  }
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      <header className="bg-slate-800 text-white p-4">
+        <h1 className="text-2xl font-bold text-center">Markdown 到 PDF 转换器</h1>
+      </header>
+      
+      <main className="flex flex-1 flex-col md:flex-row p-4 gap-4">
+        <div className="flex-1 flex flex-col">
+          <h2 className="text-lg font-semibold mb-2">Markdown 编辑器</h2>
+          <textarea
+            className="flex-1 p-4 border rounded-md font-mono text-sm resize-none"
+            value={markdown}
+            onChange={(e) => setMarkdown(e.target.value)}
+            placeholder="在这里输入 Markdown 内容..."
+          />
+        </div>
+        
+        <div className="flex-1 flex flex-col">
+          <h2 className="text-lg font-semibold mb-2">预览</h2>
+          <div 
+            className="flex-1 p-4 border rounded-md overflow-auto"
+            dangerouslySetInnerHTML={{ 
+              __html: isClient 
+                ? marked(markdown) 
+                : '加载中...' 
+            }}
+          />
         </div>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+      
+      <footer className="p-4 border-t">
+        <div className="max-w-md mx-auto">
+          <PdfDownloadButton 
+            fileName="markdown-document.pdf"
+            className="mt-4"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+        </div>
       </footer>
     </div>
   );

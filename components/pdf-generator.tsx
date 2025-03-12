@@ -168,16 +168,14 @@ const styles = StyleSheet.create({
 
 // 解析Markdown内容为PDF组件树
 function renderMarkdownElements(content: string) {
-  // 这里实现一个简化版的Markdown解析
   // 在实际项目中，您可能需要使用更复杂的解析库
   const lines = content.split('\n');
-  const elements: JSX.Element[] = [];
+  const elements: React.ReactElement[] = [];
   let inCodeBlock = false;
   let codeBlockContent = '';
   let inOrderedList = false;
   let inUnorderedList = false;
   let listItems: string[] = [];
-  let listItemCounter = 1;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -223,7 +221,6 @@ function renderMarkdownElements(content: string) {
       );
       inOrderedList = false;
       listItems = [];
-      listItemCounter = 1;
     }
     
     // 处理无序列表
@@ -401,7 +398,7 @@ export default function PdfGenerator({ markdown, fileName = 'document.pdf' }: Pd
         width: '100%',
       }}
     >
-      {({ blob, url, loading, error }) => 
+      {({ loading }) => 
         loading ? '生成PDF中...' : '导出为 PDF'
       }
     </PDFDownloadLink>
