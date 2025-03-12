@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 使用 @react-pdf/renderer 实现 Markdown 到 PDF 的转换
 
-## Getting Started
+本文档解释了如何使用 @react-pdf/renderer 库实现高质量的 Markdown 到 PDF 的转换功能。
 
-First, run the development server:
+## 实现概述
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+我们用 @react-pdf/renderer 库替换了之前的 react-to-pdf 库，它提供了以下优势：
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. **更好的布局引擎**：基于Yoga布局引擎，提供和浏览器类似的布局能力
+2. **更精确的样式控制**：可以控制每个元素的样式
+3. **更高质量的输出**：生成的PDF质量更高，字体渲染更好
+4. **更好的分页支持**：自动处理分页和页面布局
+5. **更强大的文档结构**：支持目录、页眉页脚、分节等功能
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 实现细节
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 1. 核心组件
 
-## Learn More
+我们创建了 `PdfGenerator` 组件，它包含以下部分：
 
-To learn more about Next.js, take a look at the following resources:
+- `MarkdownPDF`：将Markdown内容渲染为PDF文档
+- `renderMarkdownElements`：解析Markdown内容并将其转换为React PDF元素
+- `PDFDownloadLink`：提供PDF下载功能的链接
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 2. 解析Markdown
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+我们实现了一个简化的Markdown解析器，它能够处理：
 
-## Deploy on Vercel
+- 标题 (h1-h6)
+- 段落
+- 列表 (有序和无序)
+- 代码块
+- 内联样式 (粗体、斜体、代码)
+- 块引用
+- 水平线
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 3. 样式
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+我们为PDF文档定义了一套完整的样式，包括：
+
+- 基本排版样式
+- 字体设置
+- 颜色和间距
+- 列表和代码块样式
+- 页面布局
+
+### 4. 特殊处理
+
+为了确保PDF生成功能在Next.js环境中正常工作，我们采取了以下措施：
+
+- 使用`dynamic`导入处理PDF组件，避免SSR问题
+- 在`next.config.mjs`中添加Webpack配置以解决兼容性问题
+- 使用`useEffect`钩子确保在客户端环境中运行
+
+## 使用方法
+
+使用方法保持简单：
+
+1. 导入`PdfGenerator`组件
+2. 传入Markdown内容和文件名
+3. 组件会自动渲染一个下载按钮
+
+## 自定义扩展
+
+该实现可以进一步扩展：
+
+1. **添加更多Markdown功能**：表格、图片、任务列表等
+2. **自定义主题**：添加不同的PDF主题样式
+3. **多页面支持**：为长文档添加分页和目录
+4. **页眉页脚**：添加页码和自定义页眉页脚
+5. **元数据**：添加PDF元数据，如标题、作者等
