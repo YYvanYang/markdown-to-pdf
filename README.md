@@ -1,74 +1,85 @@
-# 使用 Puppeteer 和 Next.js API 实现 Markdown 到 PDF 的转换
+# Markdown 到 PDF 转换器
 
-本文档解释了如何使用 Puppeteer 和 Next.js API Routes 实现高质量的 Markdown 到 PDF 的转换功能。
+这是一个基于 Next.js、ByteMD 和 React PDF 的 Markdown 到 PDF 在线转换工具，提供实时预览和高质量 PDF 导出功能。
 
-## 实现概述
+## 功能特点
 
-我们使用 Puppeteer 和 Next.js API Routes 实现了 Markdown 到 PDF 的转换，它提供了以下优势：
+- **所见即所得编辑器**：使用 ByteMD 编辑器，支持实时预览和分屏编辑
+- **完整的 Markdown 支持**：基于 GitHub Flavored Markdown (GFM)，支持表格、任务列表等扩展语法
+- **代码语法高亮**：支持多种编程语言的代码块语法高亮显示
+- **数学公式**：支持 LaTeX 数学公式渲染
+- **图表支持**：集成 Mermaid 支持流程图、状态图等图表绘制
+- **高质量 PDF 导出**：生成美观、专业的 PDF 文档
+- **响应式设计**：适配桌面和移动设备显示
+- **浅色主题**：采用类似 GitHub 的浅色主题，提供舒适的阅读和编辑体验
 
-1. **服务器端渲染**：通过 Next.js API Routes 在服务器端生成 PDF，减轻客户端负担
-2. **高质量输出**：使用 Puppeteer 控制 Chromium 浏览器，生成高质量的 PDF 文档
-3. **灵活的样式控制**：使用 HTML 和 CSS 自定义样式，实现精确的布局控制
-4. **语法高亮**：使用 react-syntax-highlighter 支持代码块语法高亮
-5. **支持 GitHub 风格的 Markdown**：使用 remark-gfm 支持表格、任务列表等扩展语法
+## 技术实现
 
-## 实现细节
+### 核心技术栈
 
-### 1. 核心组件
+- **Next.js**：React 框架，提供页面路由和服务端渲染能力
+- **ByteMD**：基于 Svelte 的 Markdown 编辑器组件
+- **React PDF**：用于生成 PDF 文档的 React 库
+- **Tailwind CSS**：用于 UI 样式的实用工具类 CSS 框架
 
-我们创建了以下核心组件：
+### 主要组件
 
-- `WkhtmltopdfGenerator`：处理 PDF 生成流程和用户交互
-- `PdfDownloadButton`：提供 PDF 下载功能的按钮组件
-- `/api/generate-pdf`：服务器端 API 路由，负责 PDF 渲染
+1. **Markdown 编辑器**：集成 ByteMD 组件，支持各种 Markdown 扩展语法
+2. **Markdown 上下文**：使用 React Context API 管理编辑器的 Markdown 内容状态
+3. **PDF 下载按钮**：提供生成和下载 PDF 功能的按钮组件 
+4. **PDF 生成 API**：服务器端 API 路由，处理 PDF 生成请求
 
-### 2. 解析 Markdown
+### 插件集成
 
-我们使用 react-markdown 和 remark-gfm 解析 Markdown 内容，支持：
+ByteMD 编辑器集成了以下插件：
 
-- 标题 (h1-h6)
-- 段落
-- 列表 (有序和无序)
-- 代码块 (支持语法高亮)
-- 内联样式 (粗体、斜体、代码)
-- 块引用
-- 表格
-- 任务列表
-- 水平线
-
-### 3. PDF 生成流程
-
-PDF 生成的流程如下：
-
-1. 在客户端将 Markdown 转换为带样式的 HTML
-2. 将 HTML 发送到服务器端 API
-3. 服务器使用 Puppeteer 加载 HTML 并渲染
-4. 生成 PDF 文件并返回给客户端供下载
-
-### 4. 特殊处理
-
-为了确保 PDF 生成功能在 Next.js 环境中正常工作，我们采取了以下措施：
-
-- 使用 `dynamic` 导入处理 PDF 组件，避免 SSR 问题
-- 在服务器端使用 Puppeteer 生成 PDF，避免客户端兼容性问题
-- 使用 `useEffect` 钩子确保在客户端环境中运行
+- **gfm**：支持 GitHub Flavored Markdown 语法
+- **highlight**：代码块语法高亮
+- **math**：数学公式渲染
+- **mermaid**：图表绘制
+- **gemoji**：支持 Emoji 表情符号
+- **breaks**：支持换行符
 
 ## 使用方法
 
-使用方法保持简单：
+1. 在编辑器左侧区域输入 Markdown 内容
+2. 右侧区域会实时显示渲染后的预览效果
+3. 点击页面顶部的"导出为 PDF"按钮下载生成的 PDF 文件
 
-1. 导入 `PdfDownloadButton` 组件
-2. 在 MarkdownContext 中提供 Markdown 内容
-3. 组件会自动渲染一个下载按钮，点击后生成并下载 PDF
+## 开发指南
+
+### 本地开发
+
+```bash
+# 安装依赖
+npm install
+
+# 启动开发服务器
+npm run dev
+```
+
+### 构建和部署
+
+```bash
+# 构建生产版本
+npm run build
+
+# 启动生产服务器
+npm start
+```
 
 ## 自定义扩展
 
-该实现可以进一步扩展：
+该项目可以进一步扩展：
 
-1. **添加更多 Markdown 功能**：支持更多的 Markdown 扩展语法
-2. **自定义主题**：添加不同的 PDF 主题样式
-3. **页眉页脚**：添加页码和自定义页眉页脚
-4. **目录生成**：为长文档自动生成目录
-5. **元数据**：添加 PDF 元数据，如标题、作者等
-6. **水印和加密**：添加水印或密码保护功能
-7. **批量转换**：支持多个 Markdown 文件批量转换为 PDF
+1. **深色模式**：添加深色主题支持
+2. **更多导出格式**：支持导出为 HTML、Word 等其他格式
+3. **图片上传**：添加图片上传和管理功能
+4. **协作编辑**：添加多人实时协作功能
+5. **文档历史**：实现文档版本历史和比较功能
+6. **模板系统**：提供各种预设的文档模板
+7. **页眉页脚和页面设置**：自定义 PDF 页面布局
+
+## 许可证
+
+[MIT License](LICENSE)
