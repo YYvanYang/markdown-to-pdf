@@ -107,8 +107,8 @@ function hello() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <header className="bg-slate-800 text-white p-4 sticky top-0 z-10">
+    <div className="flex flex-col h-screen max-h-screen overflow-hidden">
+      <header className="bg-slate-800 text-white p-2 sticky top-0 z-10">
         <div className="flex items-center justify-between max-w-6xl mx-auto">
           <h1 className="text-xl md:text-2xl font-bold">Markdown 到 PDF 转换器</h1>
           <div className="w-auto">
@@ -120,14 +120,18 @@ function hello() {
         </div>
       </header>
       
-      <main className="flex flex-1 flex-col p-4 md:p-6 max-w-6xl mx-auto w-full">
-        <div className="flex-1 border rounded-md shadow-md overflow-hidden h-[calc(100vh-180px)]">
+      <main className="flex-1 overflow-hidden p-1.5 max-w-6xl mx-auto w-full flex flex-col">
+        <div className="flex-1 border rounded-md shadow-md overflow-hidden flex flex-col">
           {isClient && (
             <Editor
               value={markdown}
               plugins={plugins}
               onChange={setMarkdown}
               mode="split"
+              editorConfig={{
+                mode: 'text/markdown',
+                lineWrapping: true,
+              }}
               locale={{
                 write: '编辑',
                 preview: '预览',
@@ -159,7 +163,7 @@ function hello() {
         </div>
       </main>
       
-      <footer className="p-3 md:p-4 border-t bg-white dark:bg-gray-900 text-center text-sm text-gray-500">
+      <footer className="p-1.5 border-t bg-white dark:bg-gray-900 text-center text-xs text-gray-500">
         <div className="max-w-6xl mx-auto">
           Markdown 到 PDF 转换器 &copy; {new Date().getFullYear()}
         </div>
