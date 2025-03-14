@@ -77,3 +77,45 @@ a {
   min-height: 44px; /* 苹果推荐的最小触摸区域 */
   min-width: 44px;
 }
+
+/* 增强预览区域文本对比度 */
+.prose {
+  --tw-prose-body: #000;
+  --tw-prose-headings: #000;
+  --tw-prose-lead: #000;
+  --tw-prose-links: #0066cc;
+  --tw-prose-bold: #000;
+  --tw-prose-counters: #000;
+  --tw-prose-bullets: #000;
+  --tw-prose-hr: #e0e0e0;
+  --tw-prose-quotes: #000;
+  --tw-prose-quote-borders: #d1d5db;
+  --tw-prose-captions: #000;
+  --tw-prose-code: #000;
+  --tw-prose-pre-code: #000;
+  --tw-prose-pre-bg: #f5f5f5;
+  --tw-prose-th-borders: #d1d5db;
+  --tw-prose-td-borders: #e5e7eb;
+  color: #000;
+}
+
+/* 确保暗模式下的文本也有足够对比度 */
+.dark .prose {
+  --tw-prose-body: #fff;
+  --tw-prose-headings: #fff;
+  --tw-prose-lead: #fff;
+  --tw-prose-links: #6dc6ff;
+  --tw-prose-bold: #fff;
+  --tw-prose-counters: #fff;
+  --tw-prose-bullets: #fff;
+  --tw-prose-hr: #4a4a4a;
+  --tw-prose-quotes: #fff;
+  --tw-prose-quote-borders: #5a5a5a;
+  --tw-prose-captions: #fff;
+  --tw-prose-code: #fff;
+  --tw-prose-pre-code: #fff;
+  --tw-prose-pre-bg: #1a1a1a;
+  --tw-prose-th-borders: #4a4a4a;
+  --tw-prose-td-borders: #3a3a3a;
+  color: #fff;
+}

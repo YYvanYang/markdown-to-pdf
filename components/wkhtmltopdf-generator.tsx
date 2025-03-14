@@ -78,224 +78,176 @@ export default function WkhtmltopdfGenerator({
   
   // 获取HTML内容
   async function getHtmlContent(content: string, fileName: string): Promise<string> {
-    const markdownHtml = await renderMarkdownToHtml(content);
-    
+    // 定义HTML模板
     return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>${fileName}</title>
-        <style>
+    <!DOCTYPE html>
+    <html lang="zh-CN">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${fileName}</title>
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;600&display=swap');
+        
+        :root {
+          --text-color: #333;
+          --bg-color: #fff;
+          --code-bg: #f5f5f5;
+          --border-color: #e0e0e0;
+          --link-color: #0066cc;
+          --heading-color: #111;
+        }
+        
+        * {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+        }
+        
+        html, body {
+          font-family: 'Noto Sans SC', sans-serif;
+          line-height: 1.6;
+          color: var(--text-color);
+          background: var(--bg-color);
+          font-size: 14px;
+        }
+        
+        .container {
+          max-width: 800px;
+          margin: 0 auto;
+          padding: 2em;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+          color: var(--heading-color);
+          margin-top: 1.5em;
+          margin-bottom: 0.75em;
+          line-height: 1.3;
+        }
+        
+        h1 {
+          font-size: 2em;
+          border-bottom: 1px solid var(--border-color);
+          padding-bottom: 0.3em;
+          margin-top: 0;
+        }
+        
+        h2 {
+          font-size: 1.5em;
+        }
+        
+        h3 {
+          font-size: 1.25em;
+        }
+        
+        p {
+          margin-bottom: 1em;
+        }
+        
+        a {
+          color: var(--link-color);
+          text-decoration: none;
+        }
+        
+        a:hover {
+          text-decoration: underline;
+        }
+        
+        code {
+          font-family: 'Source Code Pro', monospace;
+          background-color: var(--code-bg);
+          padding: 0.2em 0.4em;
+          border-radius: 3px;
+          font-size: 0.9em;
+        }
+        
+        pre {
+          background-color: var(--code-bg);
+          padding: 1em;
+          overflow-x: auto;
+          border-radius: 5px;
+          margin: 1em 0;
+          line-height: 1.45;
+        }
+        
+        pre code {
+          background-color: transparent;
+          padding: 0;
+          border-radius: 0;
+          font-size: 0.9em;
+        }
+        
+        blockquote {
+          border-left: 4px solid #ddd;
+          padding-left: 1em;
+          color: #555;
+          margin: 1em 0;
+        }
+        
+        img {
+          max-width: 100%;
+          height: auto;
+        }
+        
+        table {
+          border-collapse: collapse;
+          width: 100%;
+          margin: 1em 0;
+        }
+        
+        table, th, td {
+          border: 1px solid var(--border-color);
+        }
+        
+        th, td {
+          padding: 0.5em;
+          text-align: left;
+        }
+        
+        th {
+          background-color: var(--code-bg);
+          font-weight: 600;
+        }
+        
+        ul, ol {
+          margin: 1em 0;
+          padding-left: 2em;
+        }
+        
+        li {
+          margin: 0.3em 0;
+        }
+        
+        hr {
+          border: none;
+          border-top: 1px solid var(--border-color);
+          margin: 2em 0;
+        }
+        
+        @media print {
           body {
-            font-family: "Noto Sans SC", "Noto Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-          }
-          h1, h2, h3, h4, h5, h6 {
-            margin-top: 1.5em;
-            margin-bottom: 0.5em;
-            font-weight: 600;
-            line-height: 1.25;
-          }
-          h1 {
-            font-size: 2em;
-            border-bottom: 1px solid #eaecef;
-            padding-bottom: 0.3em;
-          }
-          h2 {
-            font-size: 1.5em;
-            border-bottom: 1px solid #eaecef;
-            padding-bottom: 0.3em;
-          }
-          h3 { font-size: 1.25em; }
-          h4 { font-size: 1em; }
-          h5 { font-size: 0.875em; }
-          h6 { font-size: 0.85em; color: #6a737d; }
-          
-          p, ul, ol, blockquote {
-            margin-top: 0;
-            margin-bottom: 16px;
+            font-size: 12pt;
           }
           
-          a { color: #0366d6; text-decoration: none; }
-          a:hover { text-decoration: underline; }
-          
-          code {
-            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-            background-color: rgba(27, 31, 35, 0.05);
-            border-radius: 3px;
-            font-size: 85%;
-            padding: 0.2em 0.4em;
-          }
-          
-          pre {
-            background-color: #f6f8fa;
-            border-radius: 3px;
-            font-size: 85%;
-            line-height: 1.45;
-            overflow: auto;
-            padding: 16px;
-            border: 1px solid #e1e4e8;
-            margin-bottom: 16px;
-          }
-          
-          pre code {
-            background-color: transparent;
-            padding: 0;
-            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-          }
-          
-          /* Kindle 优化的代码高亮样式 */
-          .token.comment,
-          .token.prolog,
-          .token.doctype,
-          .token.cdata {
-            color: #5D6C79;
-            font-style: italic;
-          }
-          
-          .token.punctuation {
-            color: #24292e;
-          }
-          
-          .token.property,
-          .token.tag,
-          .token.boolean,
-          .token.number,
-          .token.constant,
-          .token.symbol {
-            color: #005CC5;
-          }
-          
-          .token.selector,
-          .token.attr-name,
-          .token.string,
-          .token.char,
-          .token.builtin {
-            color: #032F62;
-          }
-          
-          .token.operator,
-          .token.entity,
-          .token.url,
-          .token.variable {
-            color: #24292e;
-            background: transparent;
-          }
-          
-          .token.atrule,
-          .token.attr-value,
-          .token.keyword {
-            color: #D73A49;
-            font-weight: bold;
-          }
-          
-          .token.function {
-            color: #6F42C1;
-          }
-          
-          .token.regex,
-          .token.important {
-            color: #C71A16;
-          }
-          
-          .token.important,
-          .token.bold {
-            font-weight: bold;
-          }
-          
-          .token.italic {
-            font-style: italic;
-          }
-          
-          /* 提高Kindle上的代码可读性 */
-          @media print {
-            pre, code {
-              page-break-inside: avoid;
-              white-space: pre-wrap;
-              word-wrap: break-word;
-            }
-            
-            pre code {
-              font-size: 14px !important;
-              line-height: 1.5 !important;
-            }
-            
-            .token.comment,
-            .token.prolog,
-            .token.doctype,
-            .token.cdata {
-              font-style: italic;
-              font-weight: normal;
-            }
-            
-            .token.keyword,
-            .token.important,
-            .token.bold {
-              font-weight: 700;
-            }
-          }
-          
-          blockquote {
-            border-left: 0.25em solid #dfe2e5;
-            color: #6a737d;
-            padding: 0 1em;
-          }
-          
-          img {
+          .container {
             max-width: 100%;
-          }
-          
-          table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-bottom: 16px;
-          }
-          
-          table th, table td {
-            border: 1px solid #dfe2e5;
-            padding: 6px 13px;
-          }
-          
-          table tr {
-            background-color: #fff;
-            border-top: 1px solid #c6cbd1;
-          }
-          
-          table tr:nth-child(2n) {
-            background-color: #f6f8fa;
-          }
-          
-          hr {
-            height: 0.25em;
             padding: 0;
-            margin: 24px 0;
-            background-color: #e1e4e8;
-            border: 0;
           }
           
-          .footer {
-            margin-top: 30px;
-            text-align: right;
-            font-size: 0.8em;
-            color: #6a737d;
+          pre, code {
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
           }
-        </style>
-      </head>
-      <body>
-        <div class="markdown-body">
-          ${markdownHtml}
-        </div>
-        <div class="footer">
-          Generated: ${new Date().toISOString().replace('T', ' ').substring(0, 19)}
-        </div>
-      </body>
-      </html>
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        ${await renderMarkdownToHtml(content)}
+      </div>
+    </body>
+    </html>
     `;
   }
   

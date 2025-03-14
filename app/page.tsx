@@ -143,9 +143,32 @@ function hello() {
         {/* 预览区域 - 在移动端根据状态显示/隐藏 */}
         <div className={`flex-1 flex flex-col ${!showPreview ? 'hidden md:flex' : 'flex'}`}>
           <h2 className="text-base md:text-lg font-semibold mb-2">预览</h2>
-          <div className="flex-1 p-3 md:p-4 border rounded-md overflow-auto prose prose-sm md:prose max-w-none min-h-[350px] md:min-h-0">
+          <div className="flex-1 p-5 md:p-6 border rounded-md overflow-auto bg-white shadow-md prose-headings:text-black prose-p:text-black prose-li:text-black prose-strong:text-black prose-code:text-black prose-a:text-blue-600 prose-blockquote:text-black prose prose-sm md:prose lg:prose-lg max-w-none min-h-[350px] md:min-h-0">
             {isClient && (
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              <ReactMarkdown 
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  h1: ({...props}) => <h1 className="text-2xl md:text-3xl font-bold border-b pb-2 my-4 text-black" {...props} />,
+                  h2: ({...props}) => <h2 className="text-xl md:text-2xl font-bold my-3 text-black" {...props} />,
+                  h3: ({...props}) => <h3 className="text-lg md:text-xl font-semibold my-2 text-black" {...props} />,
+                  code: ({className, children, ...props}) => {
+                    const isInline = !className;
+                    return isInline 
+                      ? <code className="bg-gray-100 px-1 py-0.5 rounded text-red-700 font-medium" {...props}>{children}</code>
+                      : <code className="block bg-gray-100 p-3 rounded-md overflow-x-auto text-black" {...props}>{children}</code>;
+                  },
+                  pre: ({...props}) => <pre className="bg-gray-100 p-3 rounded-md overflow-x-auto my-4 text-black" {...props} />,
+                  blockquote: ({...props}) => <blockquote className="border-l-4 border-gray-300 pl-4 italic my-4 text-gray-800" {...props} />,
+                  table: ({...props}) => <div className="overflow-x-auto my-6"><table className="border-collapse border border-gray-300 w-full text-black" {...props} /></div>,
+                  th: ({...props}) => <th className="border border-gray-300 bg-gray-100 px-4 py-2 text-left text-black font-bold" {...props} />,
+                  td: ({...props}) => <td className="border border-gray-300 px-4 py-2 text-black" {...props} />,
+                  ul: ({...props}) => <ul className="list-disc pl-6 my-3 text-black" {...props} />,
+                  ol: ({...props}) => <ol className="list-decimal pl-6 my-3 text-black" {...props} />,
+                  li: ({...props}) => <li className="my-1 text-black" {...props} />,
+                  p: ({...props}) => <p className="my-2 text-black" {...props} />,
+                  hr: () => <hr className="my-6 border-gray-300" />,
+                }}
+              >
                 {markdown}
               </ReactMarkdown>
             )}
