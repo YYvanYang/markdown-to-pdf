@@ -3,21 +3,41 @@
 import { useState, useEffect } from 'react';
 import { useMarkdown } from '@/lib/markdownContext';
 import { PdfDownloadButton } from '@/components/pdf-download-button';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+
+// ByteMD 导入
+import { Editor } from '@bytemd/react';
+import type { BytemdLocale, BytemdPlugin } from 'bytemd';
+import 'bytemd/dist/index.css';
+
+// ByteMD 插件
+import gfm from '@bytemd/plugin-gfm';
+import highlight from '@bytemd/plugin-highlight';
+import math from '@bytemd/plugin-math';
+import mermaid from '@bytemd/plugin-mermaid';
+import gemoji from '@bytemd/plugin-gemoji';
+import breaks from '@bytemd/plugin-breaks';
+
+// 导入插件样式
+import 'highlight.js/styles/github.css';
+import 'katex/dist/katex.css';
 
 export default function Home() {
   const { markdown, setMarkdown } = useMarkdown();
   const [isClient, setIsClient] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
+
+  // ByteMD 插件配置
+  const plugins: BytemdPlugin[] = [
+    gfm(),
+    highlight(),
+    math(),
+    mermaid(),
+    gemoji(),
+    breaks(),
+  ];
 
   // 确保我们在客户端
   useEffect(() => {
     setIsClient(true);
-    
-    // 检测设备类型，在桌面端默认不显示预览
-    const isMobile = window.innerWidth < 768;
-    setShowPreview(isMobile ? false : false);
     
     // 设置默认Markdown内容
     if (!markdown) {
@@ -36,8 +56,8 @@ export default function Home() {
 
 ## 使用方法
 
-1. 在左侧编辑器中输入 Markdown 内容
-2. 在右侧查看实时预览
+1. 在编辑器中输入 Markdown 内容
+2. 点击预览按钮查看效果
 3. 点击"导出为 PDF"按钮下载 PDF 文件
 
 ## 代码示例
@@ -82,16 +102,6 @@ function hello() {
     }
   }, [markdown, setMarkdown]);
 
-  // 切换到编辑器模式
-  const switchToEditor = () => {
-    setShowPreview(false);
-  };
-
-  // 切换到预览模式
-  const switchToPreview = () => {
-    setShowPreview(true);
-  };
-
   if (!isClient) {
     return <div className="flex items-center justify-center min-h-screen">加载中...</div>;
   }
@@ -110,70 +120,42 @@ function hello() {
         </div>
       </header>
       
-      {/* 移动端切换按钮 */}
-      <div className="md:hidden flex border-b">
-        <button 
-          className={`flex-1 py-3 text-center font-medium ${!showPreview ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-500' : 'text-gray-600'}`}
-          onClick={switchToEditor}
-          aria-label="切换到编辑器模式"
-        >
-          编辑器
-        </button>
-        <button 
-          className={`flex-1 py-3 text-center font-medium ${showPreview ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-500' : 'text-gray-600'}`}
-          onClick={switchToPreview}
-          aria-label="切换到预览模式"
-        >
-          预览
-        </button>
-      </div>
-      
-      <main className="flex flex-1 flex-col md:flex-row p-2 md:p-4 gap-4 h-[calc(100vh-120px)] md:h-auto">
-        {/* 编辑器区域 - 在移动端根据状态显示/隐藏 */}
-        <div className={`flex-1 flex flex-col ${showPreview ? 'hidden md:flex' : 'flex'}`}>
-          <h2 className="text-base md:text-lg font-semibold mb-2">Markdown 编辑器</h2>
-          <textarea
-            className="flex-1 p-3 md:p-4 border rounded-md font-mono text-sm resize-none min-h-[350px] md:min-h-0"
-            value={markdown}
-            onChange={(e) => setMarkdown(e.target.value)}
-            placeholder="在这里输入 Markdown 内容..."
-          />
-        </div>
-        
-        {/* 预览区域 - 在移动端根据状态显示/隐藏 */}
-        <div className={`flex-1 flex flex-col ${!showPreview ? 'hidden md:flex' : 'flex'}`}>
-          <h2 className="text-base md:text-lg font-semibold mb-2">预览</h2>
-          <div className="flex-1 p-5 md:p-6 border rounded-md overflow-auto bg-white shadow-md prose-headings:text-black prose-p:text-black prose-li:text-black prose-strong:text-black prose-code:text-black prose-a:text-blue-600 prose-blockquote:text-black prose prose-sm md:prose lg:prose-lg max-w-none min-h-[350px] md:min-h-0">
-            {isClient && (
-              <ReactMarkdown 
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  h1: ({...props}) => <h1 className="text-2xl md:text-3xl font-bold border-b pb-2 my-4 text-black" {...props} />,
-                  h2: ({...props}) => <h2 className="text-xl md:text-2xl font-bold my-3 text-black" {...props} />,
-                  h3: ({...props}) => <h3 className="text-lg md:text-xl font-semibold my-2 text-black" {...props} />,
-                  code: ({className, children, ...props}) => {
-                    const isInline = !className;
-                    return isInline 
-                      ? <code className="bg-gray-100 px-1 py-0.5 rounded text-red-700 font-medium" {...props}>{children}</code>
-                      : <code className="block bg-gray-100 p-3 rounded-md overflow-x-auto text-black" {...props}>{children}</code>;
-                  },
-                  pre: ({...props}) => <pre className="bg-gray-100 p-3 rounded-md overflow-x-auto my-4 text-black" {...props} />,
-                  blockquote: ({...props}) => <blockquote className="border-l-4 border-gray-300 pl-4 italic my-4 text-gray-800" {...props} />,
-                  table: ({...props}) => <div className="overflow-x-auto my-6"><table className="border-collapse border border-gray-300 w-full text-black" {...props} /></div>,
-                  th: ({...props}) => <th className="border border-gray-300 bg-gray-100 px-4 py-2 text-left text-black font-bold" {...props} />,
-                  td: ({...props}) => <td className="border border-gray-300 px-4 py-2 text-black" {...props} />,
-                  ul: ({...props}) => <ul className="list-disc pl-6 my-3 text-black" {...props} />,
-                  ol: ({...props}) => <ol className="list-decimal pl-6 my-3 text-black" {...props} />,
-                  li: ({...props}) => <li className="my-1 text-black" {...props} />,
-                  p: ({...props}) => <p className="my-2 text-black" {...props} />,
-                  hr: () => <hr className="my-6 border-gray-300" />,
-                }}
-              >
-                {markdown}
-              </ReactMarkdown>
-            )}
-            {!isClient && <p>加载中...</p>}
-          </div>
+      <main className="flex flex-1 flex-col p-4 md:p-6 max-w-6xl mx-auto w-full">
+        <div className="flex-1 border rounded-md shadow-md overflow-hidden h-[calc(100vh-180px)]">
+          {isClient && (
+            <Editor
+              value={markdown}
+              plugins={plugins}
+              onChange={setMarkdown}
+              mode="split"
+              locale={{
+                write: '编辑',
+                preview: '预览',
+                fullscreen: '全屏',
+                exitFullscreen: '退出全屏',
+                // 基本操作
+                h1: '一级标题',
+                h2: '二级标题',
+                h3: '三级标题',
+                h4: '四级标题',
+                h5: '五级标题',
+                h6: '六级标题',
+                bold: '粗体',
+                italic: '斜体',
+                strikethrough: '删除线',
+                quote: '引用',
+                link: '链接',
+                image: '图片',
+                code: '代码',
+                codeBlock: '代码块',
+                unorderedList: '无序列表',
+                orderedList: '有序列表',
+                taskList: '任务列表',
+                table: '表格',
+                help: '帮助',
+              } as Partial<BytemdLocale>}
+            />
+          )}
         </div>
       </main>
       
