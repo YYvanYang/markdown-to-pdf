@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { tomorrow } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import { solarizedlight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import { createRoot } from 'react-dom/client';
 
 // 添加类型声明
@@ -140,11 +140,105 @@ export default function WkhtmltopdfGenerator({
             line-height: 1.45;
             overflow: auto;
             padding: 16px;
+            border: 1px solid #e1e4e8;
+            margin-bottom: 16px;
           }
           
           pre code {
             background-color: transparent;
             padding: 0;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+          }
+          
+          /* Kindle 优化的代码高亮样式 */
+          .token.comment,
+          .token.prolog,
+          .token.doctype,
+          .token.cdata {
+            color: #5D6C79;
+            font-style: italic;
+          }
+          
+          .token.punctuation {
+            color: #24292e;
+          }
+          
+          .token.property,
+          .token.tag,
+          .token.boolean,
+          .token.number,
+          .token.constant,
+          .token.symbol {
+            color: #005CC5;
+          }
+          
+          .token.selector,
+          .token.attr-name,
+          .token.string,
+          .token.char,
+          .token.builtin {
+            color: #032F62;
+          }
+          
+          .token.operator,
+          .token.entity,
+          .token.url,
+          .token.variable {
+            color: #24292e;
+            background: transparent;
+          }
+          
+          .token.atrule,
+          .token.attr-value,
+          .token.keyword {
+            color: #D73A49;
+            font-weight: bold;
+          }
+          
+          .token.function {
+            color: #6F42C1;
+          }
+          
+          .token.regex,
+          .token.important {
+            color: #C71A16;
+          }
+          
+          .token.important,
+          .token.bold {
+            font-weight: bold;
+          }
+          
+          .token.italic {
+            font-style: italic;
+          }
+          
+          /* 提高Kindle上的代码可读性 */
+          @media print {
+            pre, code {
+              page-break-inside: avoid;
+              white-space: pre-wrap;
+              word-wrap: break-word;
+            }
+            
+            pre code {
+              font-size: 14px !important;
+              line-height: 1.5 !important;
+            }
+            
+            .token.comment,
+            .token.prolog,
+            .token.doctype,
+            .token.cdata {
+              font-style: italic;
+              font-weight: normal;
+            }
+            
+            .token.keyword,
+            .token.important,
+            .token.bold {
+              font-weight: 700;
+            }
           }
           
           blockquote {
@@ -227,15 +321,47 @@ export default function WkhtmltopdfGenerator({
               return isCodeBlock ? (
                 <SyntaxHighlighter
                   // @ts-expect-error - 类型定义问题
-                  style={tomorrow}
+                  style={solarizedlight}
                   language={match ? match[1] : ''}
                   PreTag="div"
+                  customStyle={{
+                    // 添加自定义样式，提高可读性
+                    fontSize: '14px',
+                    lineHeight: '1.5',
+                    border: '1px solid #e1e4e8',
+                    borderRadius: '6px',
+                    // 确保高对比度，适合Kindle
+                    backgroundColor: '#fdf6e3',
+                    color: '#333',
+                  }}
+                  codeTagProps={{
+                    style: {
+                      // 确保代码文本有足够对比度
+                      fontFamily: '"SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace',
+                      fontSize: '14px',
+                    }
+                  }}
                   {...props}
                 >
                   {String(children).replace(/\n$/, '')}
                 </SyntaxHighlighter>
               ) : (
-                <code className={className} {...props}>
+                <code 
+                  className={className} 
+                  style={{
+                    // 内联代码样式优化，适合Kindle阅读
+                    fontFamily: '"SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace',
+                    backgroundColor: '#f6f8fa',
+                    border: '1px solid #eaecef',
+                    borderRadius: '3px',
+                    fontSize: '85%',
+                    padding: '0.2em 0.4em',
+                    color: '#24292e',
+                    // 增加字重，提高在Kindle上的可读性
+                    fontWeight: '600',
+                  }}
+                  {...props}
+                >
                   {children}
                 </code>
               );
