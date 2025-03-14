@@ -21,6 +21,9 @@ import breaks from '@bytemd/plugin-breaks';
 import 'highlight.js/styles/github.css';
 import 'katex/dist/katex.css';
 
+// 添加GitHub Markdown样式（浅色主题）
+import 'github-markdown-css/github-markdown-light.css';
+
 export default function Home() {
   const { markdown, setMarkdown } = useMarkdown();
   const [isClient, setIsClient] = useState(false);
@@ -120,8 +123,25 @@ function hello() {
         </div>
       </header>
       
-      <main className="flex-1 overflow-hidden p-1.5 max-w-6xl mx-auto w-full flex flex-col">
-        <div className="flex-1 border rounded-md shadow-md overflow-hidden flex flex-col">
+      <main className="flex-1 overflow-hidden w-full flex flex-col">
+        <div className="flex-1 border rounded-md shadow-md overflow-hidden grid grid-rows-1">
+          <style jsx global>{`
+            .bytemd {
+              height: 100%;
+            }
+            .grid-rows-1 > div {
+              height: 100%;
+            }
+            /* 确保预览区域使用浅色主题 */
+            .bytemd-preview {
+              color: #24292e;
+              background-color: #fff;
+            }
+            /* 为markdown-body添加内边距但不修改其主题 */
+            .markdown-body {
+              padding: 1rem;
+            }
+          `}</style>
           {isClient && (
             <Editor
               value={markdown}
@@ -131,6 +151,7 @@ function hello() {
               editorConfig={{
                 mode: 'text/markdown',
                 lineWrapping: true,
+                theme: 'default',
               }}
               locale={{
                 write: '编辑',

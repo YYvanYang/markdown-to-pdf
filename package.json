@@ -22,6 +22,7 @@
     "bytemd": "^1.22.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "github-markdown-css": "^5.2.0",
     "html-pdf-node": "^1.0.8",
     "next": "15.2.2",
     "postcss": "^8.5.3",
