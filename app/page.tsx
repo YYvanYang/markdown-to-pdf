@@ -22,7 +22,7 @@ import breaks from '@bytemd/plugin-breaks';
 import { uploadImagePlugin } from '@/lib/uploadImagePlugin';
 
 // 导入插件样式
-import 'highlight.js/styles/github.css';
+import 'highlight.js/styles/default.css';
 import 'katex/dist/katex.css';
 
 // 添加GitHub Markdown样式（浅色主题）
