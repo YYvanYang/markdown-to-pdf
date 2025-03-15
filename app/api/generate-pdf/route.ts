@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Api2Pdf from 'api2pdf';
 
 // 获取环境变量中的API密钥
 const API2PDF_API_KEY = process.env.API2PDF_API_KEY || '';
 
-// 初始化Api2Pdf客户端
-const api2pdf = new Api2Pdf(API2PDF_API_KEY);
+// API2PDF v2 的基础URL
+const API2PDF_BASE_URL = 'https://v2.api2pdf.com';
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,25 +26,56 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // 使用Api2Pdf将HTML转换为PDF
-    const result = await api2pdf.wkHtmlToPdf.convertHtml({
-      html: content,
-      fileName: fileName,
-      options: {
-        marginLeft: '20',
-        marginRight: '20',
-        marginTop: '20',
-        marginBottom: '20',
-        pageSize: 'A4',
-      }
+    // 使用API2PDF v2 API的Chrome引擎 - 根据curl示例调整参数
+    const response = await fetch(`${API2PDF_BASE_URL}/chrome/pdf/html`, {
+      method: 'POST',
+      headers: {
+        'Accept': '*/*',
+        'Content-Type': 'application/json',
+        'Authorization': API2PDF_API_KEY
+      },
+      body: JSON.stringify({
+        Html: content,
+        FileName: fileName || 'document.pdf',
+        Inline: false,
+        UseCustomStorage: false,
+        Options: {
+          Delay: 0,
+          Scale: 1,
+          DisplayHeaderFooter: false,
+          HeaderTemplate: "<span></span>",
+          FooterTemplate: "<span></span>",
+          PrintBackground: true,
+          Landscape: false,
+          PageRanges: "",
+          Width: "8.27in",
+          Height: "11.69in",
+          MarginTop: ".4in",
+          MarginBottom: ".4in",
+          MarginLeft: ".4in",
+          MarginRight: ".4in",
+          PreferCSSPageSize: true,
+          OmitBackground: false,
+          Tagged: true,
+          Outline: false,
+          UsePrintCss: true
+        }
+      })
     });
     
-    if (!result || !result.pdf) {
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`API2PDF 请求失败: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+    
+    const result = await response.json();
+    
+    if (!result || !result.FileUrl) {
       throw new Error('PDF生成失败');
     }
     
     // 获取PDF文件的URL
-    const pdfUrl = result.pdf;
+    const pdfUrl = result.FileUrl;
     
     // 获取PDF文件内容
     const pdfResponse = await fetch(pdfUrl);
@@ -60,7 +90,7 @@ export async function POST(request: NextRequest) {
     return new NextResponse(pdfBuffer, {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${fileName}"`,
+        'Content-Disposition': `attachment; filename="${fileName || 'document.pdf'}"`,
       },
     });
     
