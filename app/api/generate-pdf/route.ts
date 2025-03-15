@@ -26,7 +26,12 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // 使用API2PDF v2 API的Chrome引擎 - 增加延迟以确保复杂内容渲染完成
+    // 在内容中替换可能有问题的SVG为纯图片（最后的保护措施）
+    const processedContent = content
+      .replace(/<svg[^>]*>[\s\S]*?<\/svg>/gi, '<img src="https://i.imgur.com/IGLrpej.png" alt="图表" style="max-width:90%; margin:0 auto; display:block;">')
+      .replace(/\@import url\([^\)]+\);/g, ''); // 移除所有@import，可能会导致问题
+    
+    // 使用API2PDF v2 API的Chrome引擎，使用最保守的设置
     const response = await fetch(`${API2PDF_BASE_URL}/chrome/pdf/html`, {
       method: 'POST',
       headers: {
@@ -35,12 +40,12 @@ export async function POST(request: NextRequest) {
         'Authorization': API2PDF_API_KEY
       },
       body: JSON.stringify({
-        Html: content,
+        Html: processedContent,
         FileName: fileName || 'document.pdf',
         Inline: false,
         UseCustomStorage: false,
         Options: {
-          Delay: 2000, // 增加延迟到2秒，确保图表和公式有足够时间渲染
+          Delay: 5000, // 5秒延迟
           Scale: 1,
           DisplayHeaderFooter: false,
           HeaderTemplate: "<span></span>",
@@ -58,12 +63,20 @@ export async function POST(request: NextRequest) {
           OmitBackground: false,
           Tagged: true,
           Outline: false,
-          UsePrintCss: true,
-          WaitForNetworkIdle: true, // 等待网络空闲，确保所有资源加载完成
+          UsePrintCss: false, // 不使用print CSS
+          WaitForNetworkIdle: true,
           ExtraHTTPHeaders: {
-            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+            'Accept-Language': 'zh-CN,zh;q=0.9',
+            'Accept': 'image/*,*/*;q=0.8',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0.4472.124 Safari/537.36',
+            'Cache-Control': 'no-cache'
           },
-          EmulateMediaType: 'screen' // 使用屏幕媒体类型，确保CSS正确应用
+          EmulateMediaType: "screen",
+          WaitForReadyState: "complete", // 等待页面完全加载
+          BlockAds: false,
+          BlockedUrls: [],
+          AllowedUrls: ["*", "https://i.imgur.com/*"],
+          Timeout: 30000
         }
       })
     });
