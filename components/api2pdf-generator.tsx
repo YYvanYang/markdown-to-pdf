@@ -1,27 +1,23 @@
 'use client';
 
-import React, { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { solarizedlight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import ReactMarkdown from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneLight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import remarkGfm from 'remark-gfm';
 
-// 添加类型声明
-declare module 'react-syntax-highlighter';
-declare module 'react-syntax-highlighter/dist/cjs/styles/prism';
-
-interface WkhtmltopdfGeneratorProps {
+interface Api2pdfGeneratorProps {
   markdown: string;
   fileName?: string;
   className?: string;
 }
 
-export default function WkhtmltopdfGenerator({ 
+export default function Api2pdfGenerator({ 
   markdown, 
   fileName = 'document.pdf',
   className = ''
-}: WkhtmltopdfGeneratorProps) {
+}: Api2pdfGeneratorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -77,6 +73,9 @@ export default function WkhtmltopdfGenerator({
   
   // 获取HTML内容
   async function getHtmlContent(content: string, fileName: string): Promise<string> {
+    // 先将Markdown渲染为HTML
+    const markdownHtml = await renderMarkdownToHtml(content);
+    
     // 定义HTML模板
     return `
     <!DOCTYPE html>
@@ -243,7 +242,7 @@ export default function WkhtmltopdfGenerator({
     </head>
     <body>
       <div class="container">
-        ${await renderMarkdownToHtml(content)}
+        ${markdownHtml}
       </div>
     </body>
     </html>
@@ -269,53 +268,33 @@ export default function WkhtmltopdfGenerator({
               // 检查是否是代码块而不是内联代码
               const isCodeBlock = Boolean(match && className?.includes('language-'));
               
-              return isCodeBlock ? (
-                <SyntaxHighlighter
-                  // @ts-expect-error - 类型定义问题
-                  style={solarizedlight}
-                  language={match ? match[1] : ''}
-                  PreTag="div"
-                  customStyle={{
-                    // 添加自定义样式，提高可读性
-                    fontSize: '14px',
-                    lineHeight: '1.5',
-                    border: '1px solid #e1e4e8',
-                    borderRadius: '6px',
-                    // 确保高对比度，适合Kindle
-                    backgroundColor: '#fdf6e3',
-                    color: '#333',
-                  }}
-                  codeTagProps={{
-                    style: {
-                      // 确保代码文本有足够对比度
-                      fontFamily: '"SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace',
-                      fontSize: '14px',
-                    }
-                  }}
-                  {...props}
-                >
-                  {String(children).replace(/\n$/, '')}
-                </SyntaxHighlighter>
-              ) : (
-                <code 
-                  className={className} 
-                  style={{
-                    // 内联代码样式优化，适合Kindle阅读
-                    fontFamily: '"SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace',
-                    backgroundColor: '#f6f8fa',
-                    border: '1px solid #eaecef',
-                    borderRadius: '3px',
-                    fontSize: '85%',
-                    padding: '0.2em 0.4em',
-                    color: '#24292e',
-                    // 增加字重，提高在Kindle上的可读性
-                    fontWeight: '600',
-                  }}
-                  {...props}
-                >
-                  {children}
-                </code>
-              );
+              if (isCodeBlock && match) {
+                return (
+                  <SyntaxHighlighter
+                    {...props}
+                    style={oneLight}
+                    language={match[1]}
+                    PreTag="div"
+                  >
+                    {String(children).replace(/\n$/, '')}
+                  </SyntaxHighlighter>
+                );
+              } else {
+                return (
+                  <code {...props} className={className}>
+                    {children}
+                  </code>
+                );
+              }
+            },
+            img({node, ...props}) {
+              // 确保图片URL是绝对路径
+              let src = props.src || '';
+              if (src.startsWith('/')) {
+                src = `${window.location.origin}${src}`;
+              }
+              
+              return <img {...props} src={src} alt={props.alt || ''} />;
             }
           }}
         >
@@ -325,7 +304,7 @@ export default function WkhtmltopdfGenerator({
       
       // 等待一小段时间以确保渲染完成
       setTimeout(() => {
-        const html = tempDiv.innerHTML;
+        const html = reactRoot.innerHTML;
         root.unmount();
         resolve(html);
       }, 100);
@@ -360,7 +339,7 @@ export default function WkhtmltopdfGenerator({
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
-          Export to PDF
+          导出PDF
         </>
       )}
     </button>

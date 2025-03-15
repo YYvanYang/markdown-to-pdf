@@ -5,7 +5,7 @@ import { useMarkdown } from '@/lib/markdownContext';
 import dynamic from 'next/dynamic';
 
 // 动态导入PDF生成器组件，避免SSR问题
-const WkhtmltopdfGenerator = dynamic(() => import('./wkhtmltopdf-generator'), { 
+const Api2pdfGenerator = dynamic(() => import('./api2pdf-generator'), { 
   ssr: false,
   loading: () => (
     <button 
@@ -55,7 +55,7 @@ export function PdfDownloadButton({
 
   return (
     <div className={`${className}`}>
-      <WkhtmltopdfGenerator 
+      <Api2pdfGenerator 
         markdown={markdown} 
         fileName={fileName} 
       />

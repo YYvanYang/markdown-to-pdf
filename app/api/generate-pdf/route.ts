@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import puppeteer from 'puppeteer';
+import Api2Pdf from 'api2pdf';
+
+// 获取环境变量中的API密钥
+const API2PDF_API_KEY = process.env.API2PDF_API_KEY || '';
+
+// 初始化Api2Pdf客户端
+const api2pdf = new Api2Pdf(API2PDF_API_KEY);
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,34 +18,43 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // 检查API密钥是否已配置
+    if (!API2PDF_API_KEY) {
+      return NextResponse.json(
+        { error: '未配置API2PDF API密钥，请在环境变量中设置API2PDF_API_KEY' },
+        { status: 500 }
+      );
+    }
     
-    // 启动Puppeteer
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
-    
-    const page = await browser.newPage();
-    
-    // 设置页面内容
-    await page.setContent(content, {
-      waitUntil: 'networkidle0'
-    });
-    
-    // 生成PDF
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: {
-        top: '20mm',
-        right: '20mm',
-        bottom: '20mm',
-        left: '20mm'
+    // 使用Api2Pdf将HTML转换为PDF
+    const result = await api2pdf.wkHtmlToPdf.convertHtml({
+      html: content,
+      fileName: fileName,
+      options: {
+        marginLeft: '20',
+        marginRight: '20',
+        marginTop: '20',
+        marginBottom: '20',
+        pageSize: 'A4',
       }
     });
     
-    // 关闭浏览器
-    await browser.close();
+    if (!result || !result.pdf) {
+      throw new Error('PDF生成失败');
+    }
+    
+    // 获取PDF文件的URL
+    const pdfUrl = result.pdf;
+    
+    // 获取PDF文件内容
+    const pdfResponse = await fetch(pdfUrl);
+    
+    if (!pdfResponse.ok) {
+      throw new Error(`获取PDF文件失败: ${pdfResponse.statusText}`);
+    }
+    
+    const pdfBuffer = await pdfResponse.arrayBuffer();
     
     // 返回PDF文件
     return new NextResponse(pdfBuffer, {
