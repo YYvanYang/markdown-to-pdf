@@ -34,6 +34,29 @@ export default function Api2pdfGenerator({
   // 确保文件名有.pdf后缀
   const safeFileName = fileName.endsWith('.pdf') ? fileName : `${fileName}.pdf`;
   
+  // 处理LaTeX数学公式，确保所有格式的公式都能被识别
+  const processLatexFormulas = (content: string): string => {
+    try {
+      // 处理行内公式: $formula$ -> $formula$
+      let processedContent = content.replace(/(?<!\$)\$(?!\$)(.+?)(?<!\$)\$(?!\$)/g, (match, formula) => {
+        return `$${formula}$`;
+      });
+      
+      // 处理块级公式: $$formula$$ -> $$formula$$
+      processedContent = processedContent.replace(/\$\$([\s\S]*?)\$\$/g, (match, formula) => {
+        return `$$${formula}$$`;
+      });
+      
+      // 处理 \displaystyle 标记确保正确渲染
+      processedContent = processedContent.replace(/\\displaystyle/g, '');
+      
+      return processedContent;
+    } catch (err) {
+      console.error('处理LaTeX公式失败:', err);
+      return content;
+    }
+  };
+  
   const generatePdf = async () => {
     setIsGenerating(true);
     setError(null);
@@ -51,8 +74,11 @@ export default function Api2pdfGenerator({
         throw new Error('无法创建 iframe 文档');
       }
       
+      // 处理数学公式
+      const formulaProcessed = processLatexFormulas(markdown);
+      
       // 处理 Mermaid 图表
-      const processedContent = await processMermaidInMarkdown(markdown);
+      const processedContent = await processMermaidInMarkdown(formulaProcessed);
       
       // 在 iframe 中渲染内容
       const htmlContent = await renderContentInIframe(iframe, processedContent, safeFileName);
@@ -106,6 +132,7 @@ export default function Api2pdfGenerator({
         startOnLoad: false,
         theme: 'default',
         securityLevel: 'loose',
+        fontFamily: 'Noto Sans SC, sans-serif'
       });
       
       // 查找所有 mermaid 代码块
@@ -123,13 +150,18 @@ export default function Api2pdfGenerator({
           // 渲染 mermaid 为 SVG
           const { svg } = await mermaid.default.render(id, mermaidCode);
           
-          // 替换代码块为 SVG
+          // 替换代码块为带有明确尺寸的 SVG
           processedContent = processedContent.replace(
             match[0],
-            `<div class="mermaid-svg">${svg}</div>`
+            `<div class="mermaid-svg" style="text-align:center; margin:1em 0;">${svg}</div>`
           );
         } catch (err) {
           console.error('渲染 Mermaid 图表失败:', err);
+          // 在失败的情况下添加错误提示
+          processedContent = processedContent.replace(
+            match[0],
+            `<div class="mermaid-error" style="color:red; text-align:center; padding:1em; border:1px solid red;">Mermaid 图表渲染失败: ${err instanceof Error ? err.message : '未知错误'}</div>`
+          );
         }
       }
       
@@ -156,6 +188,16 @@ export default function Api2pdfGenerator({
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>${title}</title>
+          <!-- 预加载字体以确保PDF中显示正确 -->
+          <link rel="preload" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" as="style">
+          <link rel="preload" href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;600&display=swap" as="style">
+          <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap">
+          <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;600&display=swap">
+          <!-- 加载 KaTeX CSS -->
+          <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+          <!-- 加载 KaTeX JS 并确保它在页面加载前就准备好 -->
+          <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+          <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
           <style>
             @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
             @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;600&display=swap');
@@ -297,7 +339,7 @@ export default function Api2pdfGenerator({
             
             /* KaTeX 样式 */
             .katex {
-              font-size: 1.1em;
+              font-size: 1.1em !important;
               display: inline-block;
             }
             
@@ -309,15 +351,24 @@ export default function Api2pdfGenerator({
               overflow-y: hidden;
             }
             
+            .katex-display > .katex {
+              display: inline-block;
+              text-align: initial;
+              max-width: 100%;
+            }
+            
             /* Mermaid SVG 样式 */
             .mermaid-svg {
-              text-align: center;
-              margin: 1em 0;
+              text-align: center !important;
+              margin: 1em auto !important;
+              display: block !important;
+              width: 100% !important;
             }
             
             .mermaid-svg svg {
-              max-width: 100%;
+              max-width: 100% !important;
               height: auto !important;
+              display: inline-block !important;
             }
             
             /* Gemoji 样式 */
@@ -333,30 +384,40 @@ export default function Api2pdfGenerator({
               font-family: 'Noto Sans SC', sans-serif;
             }
           </style>
-          <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
         </head>
         <body>
           <div class="container markdown-body" id="content">
           </div>
           <script>
-            // 加载 KaTeX 用于数学公式渲染
-            const katexScript = document.createElement('script');
-            katexScript.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js';
-            katexScript.onload = function() {
-              // 渲染数学公式
-              document.querySelectorAll('.math').forEach(el => {
-                const displayMode = el.classList.contains('math-display');
-                try {
-                  katex.render(el.textContent, el, { 
-                    displayMode: displayMode,
-                    throwOnError: false 
-                  });
-                } catch (e) {
-                  console.error('KaTeX 渲染错误:', e);
-                }
-              });
-            };
-            document.head.appendChild(katexScript);
+            // 等待页面加载完成后再处理公式
+            document.addEventListener('DOMContentLoaded', function() {
+              try {
+                // 渲染所有公式
+                renderMathInElement(document.body, {
+                  delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false}
+                  ],
+                  throwOnError : false
+                });
+                
+                // 额外处理具有特定类的元素
+                document.querySelectorAll('.math').forEach(el => {
+                  const displayMode = el.classList.contains('math-display');
+                  try {
+                    katex.render(el.textContent || '', el, { 
+                      displayMode: displayMode,
+                      throwOnError: false,
+                      output: 'html'
+                    });
+                  } catch (e) {
+                    console.error('KaTeX 渲染错误:', e);
+                  }
+                });
+              } catch (e) {
+                console.error('数学公式渲染错误:', e);
+              }
+            });
           </script>
         </body>
         </html>
@@ -381,7 +442,8 @@ export default function Api2pdfGenerator({
         mathSsr({
           katexOptions: {
             throwOnError: false,
-            output: 'html'
+            output: 'html',
+            trust: true
           }
         }),
         gemoji(),
@@ -394,13 +456,35 @@ export default function Api2pdfGenerator({
         <Viewer value={content} plugins={plugins} />
       );
       
-      // 等待内容渲染完成
+      // 等待内容渲染完成 - 增加等待时间确保复杂内容渲染完成
       setTimeout(() => {
-        // 捕获完整的 HTML
-        const capturedHtml = iframe.contentDocument?.documentElement.outerHTML || '';
-        root.unmount();
-        resolve(capturedHtml);
-      }, 1000); // 给足够的时间让 KaTeX 和其他内容渲染
+        try {
+          // 手动触发数学公式渲染
+          if (iframe.contentWindow && iframe.contentDocument) {
+            // 使用类型断言处理无法识别的全局函数
+            const renderMathFn = (iframe.contentWindow as any).renderMathInElement;
+            if (typeof renderMathFn === 'function') {
+              renderMathFn(iframe.contentDocument.body, {
+                delimiters: [
+                  {left: '$$', right: '$$', display: true},
+                  {left: '$', right: '$', display: false}
+                ],
+                throwOnError: false
+              });
+            }
+          }
+          
+          // 捕获完整的 HTML
+          const capturedHtml = iframe.contentDocument?.documentElement.outerHTML || '';
+          root.unmount();
+          resolve(capturedHtml);
+        } catch (err) {
+          console.error('捕获HTML内容时出错:', err);
+          const capturedHtml = iframe.contentDocument?.documentElement.outerHTML || '';
+          root.unmount();
+          resolve(capturedHtml);
+        }
+      }, 2000); // 增加等待时间到2秒，让KaTeX和其他内容完全渲染
     });
   };
   
@@ -409,6 +493,7 @@ export default function Api2pdfGenerator({
       onClick={generatePdf}
       disabled={isGenerating || !markdown}
       className={`flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition-colors ${className} ${(!markdown || isGenerating) ? 'opacity-70 cursor-not-allowed' : ''}`}
+      title={error ? `生成PDF时发生错误: ${error}` : '将当前Markdown内容导出为PDF文件'}
     >
       {isGenerating ? (
         <>
@@ -420,17 +505,15 @@ export default function Api2pdfGenerator({
         </>
       ) : error ? (
         <>
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
           重试
         </>
       ) : (
         <>
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
           导出PDF
         </>

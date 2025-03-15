@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // 使用API2PDF v2 API的Chrome引擎 - 根据curl示例调整参数
+    // 使用API2PDF v2 API的Chrome引擎 - 增加延迟以确保复杂内容渲染完成
     const response = await fetch(`${API2PDF_BASE_URL}/chrome/pdf/html`, {
       method: 'POST',
       headers: {
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
         Inline: false,
         UseCustomStorage: false,
         Options: {
-          Delay: 0,
+          Delay: 2000, // 增加延迟到2秒，确保图表和公式有足够时间渲染
           Scale: 1,
           DisplayHeaderFooter: false,
           HeaderTemplate: "<span></span>",
@@ -58,7 +58,12 @@ export async function POST(request: NextRequest) {
           OmitBackground: false,
           Tagged: true,
           Outline: false,
-          UsePrintCss: true
+          UsePrintCss: true,
+          WaitForNetworkIdle: true, // 等待网络空闲，确保所有资源加载完成
+          ExtraHTTPHeaders: {
+            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+          },
+          EmulateMediaType: 'screen' // 使用屏幕媒体类型，确保CSS正确应用
         }
       })
     });
@@ -97,7 +102,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('PDF生成错误:', error);
     return NextResponse.json(
-      { error: '生成PDF时发生错误' },
+      { error: '生成PDF时发生错误', details: error instanceof Error ? error.message : '未知错误' },
       { status: 500 }
     );
   }
