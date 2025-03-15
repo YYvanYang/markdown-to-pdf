@@ -1,9 +1,7 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
 import path from 'path';
 import fs from 'fs/promises';
-import { redirect } from 'next/navigation';
 
 export async function uploadImage(formData: FormData) {
   try {
