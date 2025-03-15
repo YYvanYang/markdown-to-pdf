@@ -18,6 +18,9 @@ import mermaid from '@bytemd/plugin-mermaid';
 import gemoji from '@bytemd/plugin-gemoji';
 import breaks from '@bytemd/plugin-breaks';
 
+// 导入自定义图片上传插件
+import { uploadImagePlugin } from '@/lib/uploadImagePlugin';
+
 // 导入插件样式
 import 'highlight.js/styles/github.css';
 import 'katex/dist/katex.css';
@@ -38,6 +41,7 @@ export default function Home() {
     mermaid(),
     gemoji(),
     breaks(),
+    uploadImagePlugin(),
   ];
 
   // 确保我们在客户端
