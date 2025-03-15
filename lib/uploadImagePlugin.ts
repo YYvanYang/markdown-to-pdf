@@ -4,7 +4,6 @@ import { uploadImage } from '@/app/actions/upload';
 // 图片上传插件
 export function uploadImagePlugin(): BytemdPlugin {
   return {
-    name: 'upload-image',
     actions: [
       {
         title: '上传图片',
@@ -29,34 +28,73 @@ export function uploadImagePlugin(): BytemdPlugin {
                 const formData = new FormData();
                 formData.append('file', file);
 
-                // 显示上传指示器（可选）
-                ctx.appendBlock(`![上传中...](loading)`);
-
+                // 显示上传指示器
+                const loadingText = `![上传中...](loading)`;
+                const loadingPos = ctx.appendBlock(loadingText);
+                
                 // 调用服务器动作上传图片
                 const result = await uploadImage(formData);
 
                 if (result.success && result.url) {
-                  // 替换加载占位符为上传的图片URL
-                  const lastPos = ctx.codemirror.lastLine();
-                  const lastText = ctx.codemirror.getLine(lastPos);
+                  // 获取当前内容
+                  const value = ctx.editor.getValue();
                   
-                  if (lastText.includes('![上传中...](loading)')) {
-                    ctx.codemirror.replaceRange(
-                      `![${file.name}](${result.url})`,
-                      { line: lastPos, ch: 0 },
-                      { line: lastPos, ch: lastText.length }
-                    );
+                  // 查找并删除"上传中..."文本所在行
+                  const lines = value.split('\n');
+                  const loadingLine = loadingPos.line;
+                  
+                  if (loadingLine >= 0 && loadingLine < lines.length) {
+                    // 删除包含"上传中..."的行
+                    lines.splice(loadingLine, 1);
+                    
+                    // 更新编辑器内容
+                    ctx.editor.setValue(lines.join('\n'));
+                    
+                    // 添加实际图片
+                    ctx.appendBlock(`![${file.name}](${result.url})`);
                   } else {
-                    // 直接在光标位置插入图片
+                    // 如果找不到加载行，直接添加图片
                     ctx.appendBlock(`![${file.name}](${result.url})`);
                   }
                 } else {
+                  // 获取当前内容
+                  const value = ctx.editor.getValue();
+                  
+                  // 查找并删除"上传中..."文本所在行
+                  const lines = value.split('\n');
+                  const loadingLine = loadingPos.line;
+                  
+                  if (loadingLine >= 0 && loadingLine < lines.length) {
+                    // 删除包含"上传中..."的行
+                    lines.splice(loadingLine, 1);
+                    
+                    // 更新编辑器内容
+                    ctx.editor.setValue(lines.join('\n'));
+                  }
+                  
                   // 显示错误信息
                   alert(result.error || '上传图片失败');
                 }
               } catch (error) {
                 console.error('上传过程出错:', error);
                 alert('上传图片失败');
+                
+                // 获取当前内容
+                const value = ctx.editor.getValue();
+                
+                // 查找并删除"上传中..."文本所在行
+                const lines = value.split('\n');
+                
+                // 查找包含"上传中..."的行
+                const loadingLineIndex = lines.findIndex(line => line.includes('![上传中...](loading)'));
+                
+                if (loadingLineIndex !== -1) {
+                  // 删除包含"上传中..."的行
+                  lines.splice(loadingLineIndex, 1);
+                  
+                  // 更新编辑器内容
+                  ctx.editor.setValue(lines.join('\n'));
+                }
               } finally {
                 // 移除文件输入元素
                 document.body.removeChild(input);
