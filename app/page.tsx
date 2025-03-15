@@ -88,6 +88,10 @@ export default function Home() {
       <main className="flex-1 overflow-hidden w-full flex flex-col">
         <div className="flex-1 border rounded-md shadow-md overflow-hidden grid grid-rows-1">
           <style jsx global>{`
+            html, body {
+              height: 100%;
+              overflow: hidden;
+            }
             .bytemd {
               height: 100%;
             }

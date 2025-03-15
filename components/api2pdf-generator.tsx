@@ -2,10 +2,20 @@
 
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import ReactMarkdown from 'react-markdown';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneLight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
-import remarkGfm from 'remark-gfm';
+import { Viewer } from '@bytemd/react';
+
+// 导入 ByteMD 官方插件
+import gfm from '@bytemd/plugin-gfm';
+import mathSsr from '@bytemd/plugin-math-ssr';
+import gemoji from '@bytemd/plugin-gemoji';
+import highlightSsr from '@bytemd/plugin-highlight-ssr';
+import breaks from '@bytemd/plugin-breaks';
+
+// 导入必要的样式
+import 'bytemd/dist/index.css';
+import 'katex/dist/katex.min.css';
+import 'highlight.js/styles/default.css';
+import 'github-markdown-css/github-markdown-light.css';
 
 interface Api2pdfGeneratorProps {
   markdown: string;
@@ -29,8 +39,23 @@ export default function Api2pdfGenerator({
     setError(null);
     
     try {
-      // 获取HTML内容
-      const htmlContent = await getHtmlContent(markdown, safeFileName);
+      // 创建一个临时 iframe 来渲染和捕获内容
+      const iframe = document.createElement('iframe');
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.position = 'absolute';
+      iframe.style.top = '-9999px';
+      document.body.appendChild(iframe);
+      
+      if (!iframe.contentDocument) {
+        throw new Error('无法创建 iframe 文档');
+      }
+      
+      // 处理 Mermaid 图表
+      const processedContent = await processMermaidInMarkdown(markdown);
+      
+      // 在 iframe 中渲染内容
+      const htmlContent = await renderContentInIframe(iframe, processedContent, safeFileName);
       
       // 发送到服务器端API进行PDF生成
       const response = await fetch('/api/generate-pdf', {
@@ -62,6 +87,7 @@ export default function Api2pdfGenerator({
       // 清理
       link.parentNode?.removeChild(link);
       window.URL.revokeObjectURL(url);
+      document.body.removeChild(iframe);
       
     } catch (err) {
       console.error('PDF生成错误:', err);
@@ -71,245 +97,312 @@ export default function Api2pdfGenerator({
     }
   };
   
-  // 获取HTML内容
-  async function getHtmlContent(content: string, fileName: string): Promise<string> {
-    // 先将Markdown渲染为HTML
-    const markdownHtml = await renderMarkdownToHtml(content);
-    
-    // 定义HTML模板
-    return `
-    <!DOCTYPE html>
-    <html lang="zh-CN">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>${fileName}</title>
-      <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;600&display=swap');
-        
-        :root {
-          --text-color: #333;
-          --bg-color: #fff;
-          --code-bg: #f5f5f5;
-          --border-color: #e0e0e0;
-          --link-color: #0066cc;
-          --heading-color: #111;
-        }
-        
-        * {
-          box-sizing: border-box;
-          margin: 0;
-          padding: 0;
-        }
-        
-        html, body {
-          font-family: 'Noto Sans SC', sans-serif;
-          line-height: 1.6;
-          color: var(--text-color);
-          background: var(--bg-color);
-          font-size: 14px;
-        }
-        
-        .container {
-          max-width: 800px;
-          margin: 0 auto;
-          padding: 2em;
-        }
-        
-        h1, h2, h3, h4, h5, h6 {
-          color: var(--heading-color);
-          margin-top: 1.5em;
-          margin-bottom: 0.75em;
-          line-height: 1.3;
-        }
-        
-        h1 {
-          font-size: 2em;
-          border-bottom: 1px solid var(--border-color);
-          padding-bottom: 0.3em;
-          margin-top: 0;
-        }
-        
-        h2 {
-          font-size: 1.5em;
-        }
-        
-        h3 {
-          font-size: 1.25em;
-        }
-        
-        p {
-          margin-bottom: 1em;
-        }
-        
-        a {
-          color: var(--link-color);
-          text-decoration: none;
-        }
-        
-        a:hover {
-          text-decoration: underline;
-        }
-        
-        code {
-          font-family: 'Source Code Pro', monospace;
-          background-color: var(--code-bg);
-          padding: 0.2em 0.4em;
-          border-radius: 3px;
-          font-size: 0.9em;
-        }
-        
-        pre {
-          background-color: var(--code-bg);
-          padding: 1em;
-          overflow-x: auto;
-          border-radius: 5px;
-          margin: 1em 0;
-          line-height: 1.45;
-        }
-        
-        pre code {
-          background-color: transparent;
-          padding: 0;
-          border-radius: 0;
-          font-size: 0.9em;
-        }
-        
-        blockquote {
-          border-left: 4px solid #ddd;
-          padding-left: 1em;
-          color: #555;
-          margin: 1em 0;
-        }
-        
-        img {
-          max-width: 100%;
-          height: auto;
-        }
-        
-        table {
-          border-collapse: collapse;
-          width: 100%;
-          margin: 1em 0;
-        }
-        
-        table, th, td {
-          border: 1px solid var(--border-color);
-        }
-        
-        th, td {
-          padding: 0.5em;
-          text-align: left;
-        }
-        
-        th {
-          background-color: var(--code-bg);
-          font-weight: 600;
-        }
-        
-        ul, ol {
-          margin: 1em 0;
-          padding-left: 2em;
-        }
-        
-        li {
-          margin: 0.3em 0;
-        }
-        
-        hr {
-          border: none;
-          border-top: 1px solid var(--border-color);
-          margin: 2em 0;
-        }
-        
-        @media print {
-          body {
-            font-size: 12pt;
-          }
-          
-          .container {
-            max-width: 100%;
-            padding: 0;
-          }
-          
-          pre, code {
-            background-color: #f9f9f9;
-            border: 1px solid #eee;
-          }
-        }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        ${markdownHtml}
-      </div>
-    </body>
-    </html>
-    `;
-  }
-  
-  // 将Markdown渲染为HTML
-  async function renderMarkdownToHtml(content: string): Promise<string> {
-    return new Promise((resolve) => {
-      // 创建一个临时容器
-      const tempDiv = document.createElement('div');
-      const reactRoot = document.createElement('div');
-      tempDiv.appendChild(reactRoot);
+  // 处理 Mermaid 图表，将它们转换为预渲染的 SVG
+  const processMermaidInMarkdown = async (content: string): Promise<string> => {
+    try {
+      // 动态导入 mermaid
+      const mermaid = await import('mermaid');
+      await mermaid.default.initialize({
+        startOnLoad: false,
+        theme: 'default',
+        securityLevel: 'loose',
+      });
       
-      // 使用createRoot将ReactMarkdown渲染到临时div
-      const root = createRoot(reactRoot);
-      root.render(
-        <ReactMarkdown 
-          remarkPlugins={[remarkGfm]}
-          components={{
-            code({className, children, ...props}) {
-              const match = /language-(\w+)/.exec(className || '');
-              // 检查是否是代码块而不是内联代码
-              const isCodeBlock = Boolean(match && className?.includes('language-'));
-              
-              if (isCodeBlock && match) {
-                return (
-                  <SyntaxHighlighter
-                    {...props}
-                    style={oneLight}
-                    language={match[1]}
-                    PreTag="div"
-                  >
-                    {String(children).replace(/\n$/, '')}
-                  </SyntaxHighlighter>
-                );
-              } else {
-                return (
-                  <code {...props} className={className}>
-                    {children}
-                  </code>
-                );
-              }
-            },
-            img({node, ...props}) {
-              // 确保图片URL是绝对路径
-              let src = props.src || '';
-              if (src.startsWith('/')) {
-                src = `${window.location.origin}${src}`;
-              }
-              
-              return <img {...props} src={src} alt={props.alt || ''} />;
+      // 查找所有 mermaid 代码块
+      const mermaidPattern = /```mermaid\n([\s\S]*?)\n```/g;
+      let match;
+      let processedContent = content;
+      let index = 0;
+      
+      // 替换每个 mermaid 代码块为静态 SVG
+      while ((match = mermaidPattern.exec(content)) !== null) {
+        try {
+          const mermaidCode = match[1];
+          const id = `mermaid-diagram-${index++}`;
+          
+          // 渲染 mermaid 为 SVG
+          const { svg } = await mermaid.default.render(id, mermaidCode);
+          
+          // 替换代码块为 SVG
+          processedContent = processedContent.replace(
+            match[0],
+            `<div class="mermaid-svg">${svg}</div>`
+          );
+        } catch (err) {
+          console.error('渲染 Mermaid 图表失败:', err);
+        }
+      }
+      
+      return processedContent;
+    } catch (err) {
+      console.error('处理 Mermaid 图表失败:', err);
+      return content;
+    }
+  };
+  
+  // 在 iframe 中渲染内容，这样可以利用浏览器的渲染能力
+  const renderContentInIframe = async (iframe: HTMLIFrameElement, content: string, title: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      if (!iframe.contentDocument) {
+        reject(new Error('无法访问 iframe 文档'));
+        return;
+      }
+      
+      // 创建一个完整的 HTML 文档
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html lang="zh-CN">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${title}</title>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;600&display=swap');
+            
+            :root {
+              --text-color: #333;
+              --bg-color: #fff;
+              --code-bg: #f5f5f5;
+              --border-color: #e0e0e0;
+              --link-color: #0066cc;
+              --heading-color: #111;
             }
-          }}
-        >
-          {content}
-        </ReactMarkdown>
+            
+            * {
+              box-sizing: border-box;
+              margin: 0;
+              padding: 0;
+            }
+            
+            html, body {
+              font-family: 'Noto Sans SC', sans-serif;
+              line-height: 1.6;
+              color: var(--text-color);
+              background: var(--bg-color);
+              font-size: 14px;
+            }
+            
+            .container {
+              max-width: 800px;
+              margin: 0 auto;
+              padding: 2em;
+            }
+            
+            h1, h2, h3, h4, h5, h6 {
+              color: var(--heading-color);
+              margin-top: 1.5em;
+              margin-bottom: 0.75em;
+              line-height: 1.3;
+            }
+            
+            h1 {
+              font-size: 2em;
+              border-bottom: 1px solid var(--border-color);
+              padding-bottom: 0.3em;
+              margin-top: 0;
+            }
+            
+            h2 {
+              font-size: 1.5em;
+            }
+            
+            h3 {
+              font-size: 1.25em;
+            }
+            
+            p {
+              margin-bottom: 1em;
+            }
+            
+            a {
+              color: var(--link-color);
+              text-decoration: none;
+            }
+            
+            a:hover {
+              text-decoration: underline;
+            }
+            
+            code {
+              font-family: 'Source Code Pro', monospace;
+              background-color: var(--code-bg);
+              padding: 0.2em 0.4em;
+              border-radius: 3px;
+              font-size: 0.9em;
+            }
+            
+            pre {
+              background-color: var(--code-bg);
+              padding: 1em;
+              overflow-x: auto;
+              border-radius: 5px;
+              margin: 1em 0;
+              line-height: 1.45;
+            }
+            
+            pre code {
+              background-color: transparent;
+              padding: 0;
+              border-radius: 0;
+              font-size: 0.9em;
+            }
+            
+            blockquote {
+              border-left: 4px solid #ddd;
+              padding-left: 1em;
+              color: #555;
+              margin: 1em 0;
+            }
+            
+            img {
+              max-width: 100%;
+              height: auto;
+            }
+            
+            table {
+              border-collapse: collapse;
+              width: 100%;
+              margin: 1em 0;
+            }
+            
+            table, th, td {
+              border: 1px solid var(--border-color);
+            }
+            
+            th, td {
+              padding: 0.5em;
+              text-align: left;
+            }
+            
+            th {
+              background-color: var(--code-bg);
+              font-weight: 600;
+            }
+            
+            ul, ol {
+              margin: 1em 0;
+              padding-left: 2em;
+            }
+            
+            li {
+              margin: 0.3em 0;
+            }
+            
+            hr {
+              border: none;
+              border-top: 1px solid var(--border-color);
+              margin: 2em 0;
+            }
+            
+            /* KaTeX 样式 */
+            .katex {
+              font-size: 1.1em;
+              display: inline-block;
+            }
+            
+            .katex-display {
+              display: block;
+              margin: 1em 0;
+              text-align: center;
+              overflow-x: auto;
+              overflow-y: hidden;
+            }
+            
+            /* Mermaid SVG 样式 */
+            .mermaid-svg {
+              text-align: center;
+              margin: 1em 0;
+            }
+            
+            .mermaid-svg svg {
+              max-width: 100%;
+              height: auto !important;
+            }
+            
+            /* Gemoji 样式 */
+            .emoji {
+              height: 1.2em;
+              width: 1.2em;
+              margin: 0 .05em 0 .1em;
+              vertical-align: -0.1em;
+            }
+            
+            /* Markdown 样式 */
+            .markdown-body {
+              font-family: 'Noto Sans SC', sans-serif;
+            }
+          </style>
+          <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+        </head>
+        <body>
+          <div class="container markdown-body" id="content">
+          </div>
+          <script>
+            // 加载 KaTeX 用于数学公式渲染
+            const katexScript = document.createElement('script');
+            katexScript.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js';
+            katexScript.onload = function() {
+              // 渲染数学公式
+              document.querySelectorAll('.math').forEach(el => {
+                const displayMode = el.classList.contains('math-display');
+                try {
+                  katex.render(el.textContent, el, { 
+                    displayMode: displayMode,
+                    throwOnError: false 
+                  });
+                } catch (e) {
+                  console.error('KaTeX 渲染错误:', e);
+                }
+              });
+            };
+            document.head.appendChild(katexScript);
+          </script>
+        </body>
+        </html>
+      `;
+      
+      // 写入 HTML 内容
+      iframe.contentDocument.open();
+      iframe.contentDocument.write(htmlContent);
+      iframe.contentDocument.close();
+      
+      // 使用 ByteMD 渲染 Markdown
+      const container = iframe.contentDocument.getElementById('content');
+      if (!container) {
+        reject(new Error('无法找到内容容器'));
+        return;
+      }
+      
+      // 创建 ByteMD Viewer
+      const root = createRoot(container);
+      const plugins = [
+        gfm(),
+        mathSsr({
+          katexOptions: {
+            throwOnError: false,
+            output: 'html'
+          }
+        }),
+        gemoji(),
+        highlightSsr(),
+        breaks()
+      ];
+      
+      // 渲染内容
+      root.render(
+        <Viewer value={content} plugins={plugins} />
       );
       
-      // 等待一小段时间以确保渲染完成
+      // 等待内容渲染完成
       setTimeout(() => {
-        const html = reactRoot.innerHTML;
+        // 捕获完整的 HTML
+        const capturedHtml = iframe.contentDocument?.documentElement.outerHTML || '';
         root.unmount();
-        resolve(html);
-      }, 100);
+        resolve(capturedHtml);
+      }, 1000); // 给足够的时间让 KaTeX 和其他内容渲染
     });
-  }
+  };
   
   return (
     <button
