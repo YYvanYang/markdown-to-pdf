@@ -109,7 +109,7 @@ export default function Home() {
               value={markdown}
               plugins={plugins}
               onChange={setMarkdown}
-              mode="split"
+              mode="auto"
               editorConfig={{
                 mode: 'text/markdown',
                 lineWrapping: true,
